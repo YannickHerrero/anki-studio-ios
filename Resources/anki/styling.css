@@ -1,0 +1,513 @@
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Shippori+Mincho:wght@500;600&display=swap');
+
+.card {
+  background: #e7e4de;
+  font-family: 'Zen Kaku Gothic New', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  --bBg: #fbfbfc;
+  --bInk: #1b1e23;
+  --bMuted: #9298a1;
+  --bLine: #ecedf1;
+  --bPanel: #f4f5f7;
+  --bShadow: rgba(36, 33, 28, 0.13);
+  --accent: #3f7d5f;
+}
+
+.card.nightMode {
+  background: #141519;
+  --bBg: #16181c;
+  --bInk: #e7e9ed;
+  --bMuted: #787d86;
+  --bLine: #262931;
+  --bPanel: #1c1f24;
+  --bShadow: rgba(0, 0, 0, 0.5);
+  --accent: #84c9a6;
+}
+
+.js-card {
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.js-card--answer {
+  padding-top: 4px;
+}
+
+.js-card__inner {
+  width: 100%;
+  max-width: 720px;
+  background: var(--bBg);
+  border: 1px solid var(--bLine);
+  border-radius: 11px;
+  box-shadow: 0 14px 44px var(--bShadow);
+  overflow: hidden;
+  text-align: left;
+}
+
+.js-rule {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.js-rule__bar {
+  width: 14px;
+  height: 2px;
+  background: var(--accent);
+}
+
+.js-rule__label {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--bMuted);
+  font-weight: 700;
+}
+
+.js-sentence {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 2.05;
+  color: var(--bInk);
+  letter-spacing: 0.01em;
+  margin-top: 14px;
+  text-align: center;
+}
+
+.js-sentence ruby {
+  ruby-align: center;
+}
+
+.js-sentence rt {
+  font-weight: 400;
+  font-size: 0.44em;
+  letter-spacing: 0.01em;
+  opacity: 0.82;
+  transform: translateY(2px);
+}
+
+.js-screenshot {
+  position: relative;
+}
+
+.js-screenshot img {
+  width: 100%;
+  display: block;
+  border-bottom: 1px solid var(--bLine);
+}
+
+.js-section {
+  padding: 18px 28px 0;
+}
+
+.js-section--sentence {
+  padding-top: 22px;
+}
+
+.js-section:last-child {
+  padding-bottom: 26px;
+}
+
+.js-panel {
+  background: var(--bPanel);
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+
+.js-panel .js-rule {
+  margin-bottom: 8px;
+}
+
+.js-translation {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--bInk);
+}
+
+.js-vocabulary {
+  margin-top: 10px;
+}
+
+.js-vocab-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+}
+
+.js-vocab-item--target {
+  border-left: 2px solid var(--accent);
+  padding-left: 10px;
+  margin-left: -12px;
+}
+
+.js-vocab-item__head {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--bInk);
+  min-width: 62px;
+}
+
+.js-vocab-item--target .js-vocab-item__head {
+  color: var(--accent);
+}
+
+.js-vocab-item__reading {
+  font-size: 11px;
+  color: var(--bMuted);
+  min-width: 54px;
+}
+
+.js-vocab-item__gloss {
+  font-size: 13px;
+  color: var(--bInk);
+}
+
+.js-grammar__title {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+
+.js-grammar__body {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--bInk);
+}
+
+.js-grammar__entry + .js-grammar__entry {
+  margin-top: 12px;
+}
+
+.js-gloss__chunk + .js-gloss__chunk {
+  margin-top: 14px;
+}
+
+.js-gloss__phrase {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.js-gloss__reading {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--bMuted);
+  margin-left: 8px;
+}
+
+.js-gloss__items {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 12px;
+  border-left: 1px solid var(--bLine);
+}
+
+.js-gloss__item {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--bInk);
+}
+
+.js-gloss__token {
+  font-weight: 600;
+}
+
+.js-gloss__token-reading {
+  color: var(--bMuted);
+}
+
+.js-gloss__chunk-tr {
+  margin-top: 4px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--bMuted);
+}
+
+.js-gloss__chunk-tr::before {
+  content: '→ ';
+}
+
+.js-gloss__natural {
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.7;
+  font-weight: 600;
+  color: var(--bInk);
+}
+
+.js-gloss__intent {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.7;
+  font-style: italic;
+  color: var(--bMuted);
+}
+
+.js-notes {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--bInk);
+  white-space: pre-wrap;
+}
+
+.js-audio {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0 24px;
+}
+/* Hidden variant — used on the back so audio autoplays without showing a
+   second button (the visible one is already in {{FrontSide}}). */
+.js-audio--hidden {
+  display: none;
+}
+
+/* Overlay variant — floats the pill in the bottom-left corner of the
+   screenshot so the card stays compact. Pairs with .js-screenshot's
+   position:relative. */
+.js-audio--overlay {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  padding: 0;
+  display: block;
+}
+.js-audio--overlay .replay-button,
+.js-audio--overlay .replaybutton {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+
+/* Style Anki's replay button as a pill with a green play disc + waveform.
+   Anki renders [sound:foo.mp3] as <a class="replay-button">…</a> (newer)
+   or <a class="replaybutton">…</a> (older); both are styled here. */
+.replay-button,
+.replaybutton {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 24px 6px 6px;
+  background: var(--bPanel);
+  border: 1px solid var(--bLine);
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--accent);
+  cursor: pointer;
+}
+.replay-button:hover,
+.replaybutton:hover {
+  background: var(--bLine);
+}
+/* Suppress Anki's default SVG so the pseudo-elements are the only mark. */
+.replay-button svg,
+.replay-button > span,
+.replaybutton svg,
+.replaybutton > span {
+  display: none;
+}
+/* Green play disc on the left. */
+.replay-button::before,
+.replaybutton::before {
+  content: '';
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  background-image: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23ffffff' d='M8 5v14l11-7z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: 56% center;
+  background-size: 14px;
+}
+/* Waveform on the right. Eight independent vertical bars rendered as a
+   multi-layer background — one linear-gradient per bar, each with its own
+   background-position and animatable background-size height. Anchoring at
+   `bottom` lets each bar grow upward from a baseline (equaliser look).
+   Bar width / step / height-scale live in CSS variables so the mobile
+   media query only has to redefine those three. */
+.replay-button::after,
+.replaybutton::after {
+  content: '';
+  width: 56px;
+  height: 22px;
+  --bar-w: 3px;
+  --bar-step: 7px;
+  --bar-s: 1;
+  background-color: transparent;
+  background-image:
+    linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(var(--accent), var(--accent));
+  background-repeat: no-repeat;
+  background-position:
+    calc(var(--bar-step) * 0) bottom,
+    calc(var(--bar-step) * 1) bottom,
+    calc(var(--bar-step) * 2) bottom,
+    calc(var(--bar-step) * 3) bottom,
+    calc(var(--bar-step) * 4) bottom,
+    calc(var(--bar-step) * 5) bottom,
+    calc(var(--bar-step) * 6) bottom,
+    calc(var(--bar-step) * 7) bottom;
+  background-size:
+    var(--bar-w) calc(6px * var(--bar-s)),
+    var(--bar-w) calc(14px * var(--bar-s)),
+    var(--bar-w) calc(8px * var(--bar-s)),
+    var(--bar-w) calc(16px * var(--bar-s)),
+    var(--bar-w) calc(4px * var(--bar-s)),
+    var(--bar-w) calc(12px * var(--bar-s)),
+    var(--bar-w) calc(10px * var(--bar-s)),
+    var(--bar-w) calc(18px * var(--bar-s));
+  animation: as-bars 1.5s ease-in-out infinite;
+}
+/* Smooth pulsing — each bar interpolates between three heights over the
+   cycle with an ease-in-out timing function, so the motion feels organic
+   rather than ticking. */
+@keyframes as-bars {
+  0%, 100% {
+    background-size:
+      var(--bar-w) calc(6px * var(--bar-s)),
+      var(--bar-w) calc(14px * var(--bar-s)),
+      var(--bar-w) calc(8px * var(--bar-s)),
+      var(--bar-w) calc(16px * var(--bar-s)),
+      var(--bar-w) calc(4px * var(--bar-s)),
+      var(--bar-w) calc(12px * var(--bar-s)),
+      var(--bar-w) calc(10px * var(--bar-s)),
+      var(--bar-w) calc(18px * var(--bar-s));
+  }
+  33% {
+    background-size:
+      var(--bar-w) calc(14px * var(--bar-s)),
+      var(--bar-w) calc(4px * var(--bar-s)),
+      var(--bar-w) calc(16px * var(--bar-s)),
+      var(--bar-w) calc(8px * var(--bar-s)),
+      var(--bar-w) calc(12px * var(--bar-s)),
+      var(--bar-w) calc(18px * var(--bar-s)),
+      var(--bar-w) calc(6px * var(--bar-s)),
+      var(--bar-w) calc(10px * var(--bar-s));
+  }
+  66% {
+    background-size:
+      var(--bar-w) calc(10px * var(--bar-s)),
+      var(--bar-w) calc(12px * var(--bar-s)),
+      var(--bar-w) calc(4px * var(--bar-s)),
+      var(--bar-w) calc(18px * var(--bar-s)),
+      var(--bar-w) calc(16px * var(--bar-s)),
+      var(--bar-w) calc(6px * var(--bar-s)),
+      var(--bar-w) calc(14px * var(--bar-s)),
+      var(--bar-w) calc(8px * var(--bar-s));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .replay-button::after,
+  .replaybutton::after {
+    animation: none;
+  }
+}
+
+/* Phone-sized viewports: shrink the pill + green disc + waveform so the
+   overlay stops crowding the small screenshot. The play triangle inside
+   the disc keeps its 14px size on purpose. The waveform reuses the same
+   keyframes — only --bar-w / --bar-step / --bar-s change. */
+@media (max-width: 480px) {
+  .js-audio--overlay {
+    left: 10px;
+    bottom: 10px;
+  }
+  .replay-button,
+  .replaybutton {
+    gap: 8px;
+    padding: 3px 16px 3px 3px;
+  }
+  .replay-button::before,
+  .replaybutton::before {
+    width: 26px;
+    height: 26px;
+  }
+  .replay-button::after,
+  .replaybutton::after {
+    width: 38px;
+    height: 16px;
+    --bar-w: 2px;
+    --bar-step: 5px;
+    --bar-s: 0.73;
+  }
+}
+
+/* ----- Vocab-card additions ----- */
+
+.js-section--word {
+  padding: 28px 28px 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+}
+
+.js-target-word {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 1.1;
+  color: var(--bInk);
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.js-sentence .js-target {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.js-word-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.js-word-lemma {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--bInk);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.js-word-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--bMuted);
+  text-transform: lowercase;
+}
+
+.js-word-meta__sep {
+  color: var(--bLine);
+}
+
+.js-word-def {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--bInk);
+}
+
+.js-word-usage {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--bMuted);
+  font-style: italic;
+}

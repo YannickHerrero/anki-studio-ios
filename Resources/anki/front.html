@@ -1,0 +1,18 @@
+<div class="js-card">
+  <div class="js-card__inner">
+    {{#Screenshot}}
+    <div class="js-screenshot">
+      {{Screenshot}}
+      {{#Audio}}<div class="js-audio js-audio--overlay">{{Audio}}</div>{{/Audio}}
+    </div>
+    {{/Screenshot}}
+
+    {{^Screenshot}}
+    {{#Audio}}<div class="js-audio">{{Audio}}</div>{{/Audio}}
+    {{/Screenshot}}
+
+    <div class="js-section js-section--word">
+      <div class="js-target-word">{{TargetWord}}</div>
+    </div>
+  </div>
+</div>
