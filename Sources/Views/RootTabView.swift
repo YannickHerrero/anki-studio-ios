@@ -11,7 +11,7 @@ struct RootTabView: View {
             PlaceholderScreen(title: "Review & Mine", systemImage: "rectangle.stack")
                 .tabItem { Label("Review", systemImage: "rectangle.stack") }
 
-            PlaceholderScreen(title: "Settings", systemImage: "gearshape")
+            SettingsView()
                 .tabItem { Label("Settings", systemImage: "gearshape") }
         }
     }
