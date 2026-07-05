@@ -1,36 +1,50 @@
 import SwiftUI
 
 /// Top-level tab bar. Mirrors the desktop app's flow: add a source, review &
-/// mine, then manage the pile / export. Screens are filled in per milestone.
+/// mine, then export the pile.
 struct RootTabView: View {
-    var body: some View {
-        TabView {
-            PlaceholderScreen(title: "Add from YouTube", systemImage: "plus.circle")
-                .tabItem { Label("Add", systemImage: "plus.circle") }
+    @State private var selection = 0
 
-            PlaceholderScreen(title: "Review & Mine", systemImage: "rectangle.stack")
+    var body: some View {
+        TabView(selection: $selection) {
+            IngestView()
+                .tabItem { Label("Add", systemImage: "plus.circle") }
+                .tag(0)
+
+            ReviewTab()
                 .tabItem { Label("Review", systemImage: "rectangle.stack") }
+                .tag(1)
 
             SettingsView()
                 .tabItem { Label("Settings", systemImage: "gearshape") }
+                .tag(2)
+        }
+        .onAppear {
+            // UI-test / screenshot hook: seed a demo session and open Review.
+            if ProcessInfo.processInfo.environment["SEED_DEMO"] == "1" {
+                if SessionStore.shared.sessions.isEmpty {
+                    DemoSession.create(into: .shared)
+                }
+                selection = 1
+            }
         }
     }
 }
 
-private struct PlaceholderScreen: View {
-    let title: String
-    let systemImage: String
+/// Shows the most recent session for review, or an empty state.
+private struct ReviewTab: View {
+    @ObservedObject private var store = SessionStore.shared
 
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.system(size: 44))
-                .foregroundStyle(.secondary)
-            Text(title)
-                .font(.headline)
-            Text("Coming soon")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        if let session = store.sessions.first {
+            ReviewView(session: session)
+                .id(session.id)
+        } else {
+            ContentUnavailableView(
+                "No session yet",
+                systemImage: "play.rectangle",
+                description: Text("Add a video — or load the demo — from the Add tab.")
+            )
         }
     }
 }
