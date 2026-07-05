@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+
+# Xcode / build
+DerivedData/
+build/
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+*.moved-aside
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Package.resolved
+
+# Generated
+*.ipa
+*.dSYM.zip
+*.dSYM
