@@ -62,6 +62,11 @@ struct ReviewView: View {
             }
             .navigationTitle(vm.current.map { "Line \($0.index + 1) / \(vm.session.cues.count)" } ?? "Review")
             .navigationBarTitleDisplayMode(.inline)
+            // The video pane sits right under the bar — keep the bar opaque
+            // and dark so the title stays legible over the black media area.
+            .toolbarBackground(.black, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .onAppear { playCurrent() }
             .onDisappear { segmentPlayer.stop(); clipPlayer?.stop() }
             .onChange(of: vm.index) { playCurrent() }
