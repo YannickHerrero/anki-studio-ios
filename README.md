@@ -29,7 +29,31 @@ open AnkiStudio.xcodeproj
 The `.xcodeproj` is generated and git-ignored — run `xcodegen` after
 cloning or after changing `project.yml`.
 
-## Status
+## How it works
 
-Work in progress; built milestone by milestone. See the module layout
-under `Sources/`.
+1. **Add** — paste a YouTube URL. On-device pipeline: YouTubeKit resolves a
+   progressive H.264 mp4 (≤480p) → URLSession downloads it → AVFoundation
+   extracts mono 16 kHz audio → OpenAI Whisper transcribes with word
+   timestamps → sentences are split on punctuation/pauses → OpenRouter
+   translates the whole transcript in context and re-tokenizes each line
+   (Apple NaturalLanguage as offline fallback) → AVFoundation cuts a padded
+   audio clip + midpoint screenshot per line.
+2. **Review** — tap words in each sentence to pick them; picked words join
+   the pile.
+3. **Pile → Export** — builds a `collection.anki2` + legacy-media `.apkg`
+   on-device (system SQLite + a built-in zip writer) and hands it to
+   AnkiMobile via the share sheet. Note GUIDs are stable, so re-exports
+   update instead of duplicating.
+
+Keys (Settings tab) are stored in the Keychain. Requires an OpenAI key
+(Whisper) and an OpenRouter key (translation/tokens/gloss).
+
+## Known v1 limits
+
+- Known-words sync from Anki is not ported (AnkiConnect doesn't exist on
+  iOS) — every word starts unmarked.
+- Always transcribes with Whisper (no uploader-subtitle path yet).
+- Videos offering only VP9/WebM streams are rejected (AVFoundation needs
+  H.264 mp4); most videos offer a progressive mp4.
+- Long videos are limited by Whisper's 25 MB audio ceiling (~2h at the
+  32 kbps mono encode used here); no chunking yet.
