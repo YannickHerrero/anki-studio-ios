@@ -1,15 +1,15 @@
 import SwiftUI
 
-/// The "Add from YouTube" screen. The live pipeline (download → transcribe →
-/// translate → tokenize) is wired in a later milestone; for now the URL field
-/// is present and a demo session can be seeded to exercise review + export.
+/// The "Add from YouTube" screen: paste a URL and run the full on-device
+/// pipeline (download → transcribe → translate → tokenize → cut media).
 struct IngestView: View {
     @ObservedObject private var store = SessionStore.shared
     @ObservedObject private var settings = AppSettings.shared
+    @StateObject private var run = IngestRun()
     @State private var url = ""
 
     private var urlLooksValid: Bool {
-        url.contains("youtu.be/") || url.contains("youtube.com/watch")
+        YouTubeService.videoID(from: url) != nil
     }
 
     var body: some View {
@@ -20,12 +20,13 @@ struct IngestView: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .keyboardType(.URL)
+                        .disabled(run.isRunning)
                     Button {
-                        // Live ingest lands in a later milestone.
+                        Task { await run.run(urlString: url, settings: settings) }
                     } label: {
                         Label("Import video", systemImage: "arrow.down.circle")
                     }
-                    .disabled(!urlLooksValid || !settings.isYoutubeReady)
+                    .disabled(!urlLooksValid || !settings.isYoutubeReady || run.isRunning)
                 } header: {
                     Text("YouTube")
                 } footer: {
@@ -36,12 +37,34 @@ struct IngestView: View {
                     }
                 }
 
+                if run.isRunning || run.phase == .failed {
+                    Section("Progress") {
+                        HStack {
+                            if run.isRunning { ProgressView().padding(.trailing, 6) }
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(run.phase.rawValue).font(.subheadline)
+                                if !run.detail.isEmpty {
+                                    Text(run.detail).font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                            Spacer()
+                        }
+                        if let p = run.progress, run.isRunning {
+                            ProgressView(value: p)
+                        }
+                        if let err = run.errorMessage {
+                            Text(err).font(.caption).foregroundStyle(.red)
+                        }
+                    }
+                }
+
                 Section("Try it now") {
                     Button {
                         DemoSession.create(into: store)
                     } label: {
                         Label("Load demo session", systemImage: "sparkles")
                     }
+                    .disabled(run.isRunning)
                     Text("Seeds a short pre-tokenized session so you can try tapping words, building a pile, and exporting a deck.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -50,13 +73,11 @@ struct IngestView: View {
                 if !store.sessions.isEmpty {
                     Section("Sessions") {
                         ForEach(store.sessions) { session in
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text(session.title ?? "Untitled").font(.subheadline)
-                                    Text("\(session.cues.count) lines · \(session.picks.count) picked")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
+                            VStack(alignment: .leading) {
+                                Text(session.title ?? "Untitled").font(.subheadline)
+                                Text("\(session.cues.count) lines · \(session.picks.count) picked · \(session.status.rawValue)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
                             }
                         }
                         .onDelete { offsets in
