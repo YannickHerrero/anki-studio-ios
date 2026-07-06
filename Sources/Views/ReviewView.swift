@@ -232,8 +232,14 @@ struct ReviewView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 4))
                 .foregroundStyle(picked ? Theme.accent : Theme.ink)
                 .contentShape(Rectangle())
-                // Tap = yomitan-style lookup; long-press = toggle in the
-                // multi-select (committed by the add-to-pile button).
+                // Double-tap = toggle in the multi-select (committed by the
+                // add-to-pile button); single tap = yomitan-style lookup.
+                // Declared first so SwiftUI delays the single tap just long
+                // enough to disambiguate. Long-press still selects too.
+                .onTapGesture(count: 2) {
+                    Haptics.select()
+                    vm.toggle(index)
+                }
                 .onTapGesture {
                     Haptics.tap()
                     dictionaryToken = token
@@ -255,7 +261,7 @@ struct ReviewView: View {
             vm.commitPicks()
         } label: {
             Label(
-                vm.selectedCount == 0 ? "Hold words to select" : "Add \(vm.selectedCount) to pile",
+                vm.selectedCount == 0 ? "Double-tap words to select" : "Add \(vm.selectedCount) to pile",
                 systemImage: "plus.circle.fill"
             )
             .frame(maxWidth: .infinity)
