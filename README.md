@@ -29,6 +29,12 @@ open AnkiStudio.xcodeproj
 The `.xcodeproj` is generated and git-ignored — run `xcodegen` after
 cloning or after changing `project.yml`.
 
+## Demo
+
+| Library | Review | Dictionary | Sentence gloss |
+|---|---|---|---|
+| ![Library](docs/screenshots/library.png) | ![Review](docs/screenshots/review.png) | ![Dictionary](docs/screenshots/dict.png) | ![Sentence gloss](docs/screenshots/gloss.png) |
+
 ## How it works
 
 1. **Add** — paste a YouTube URL. On-device pipeline: YouTubeKit resolves a
