@@ -24,11 +24,6 @@ struct ExplainSheet: View {
             Group {
                 if let gloss {
                     glossView(gloss)
-                } else if loading {
-                    VStack(spacing: 10) {
-                        ProgressView()
-                        Text("Explaining…").font(.subheadline).foregroundStyle(.secondary)
-                    }
                 } else if let errorMessage {
                     ContentUnavailableView {
                         Label("Couldn't explain", systemImage: "exclamationmark.bubble")
@@ -36,6 +31,13 @@ struct ExplainSheet: View {
                         Text(errorMessage)
                     } actions: {
                         Button("Retry") { generate() }
+                    }
+                } else {
+                    // Also the idle state — the view must render SOMETHING or
+                    // SwiftUI never installs it and .task below won't fire.
+                    VStack(spacing: 10) {
+                        ProgressView()
+                        Text("Explaining…").font(.subheadline).foregroundStyle(.secondary)
                     }
                 }
             }

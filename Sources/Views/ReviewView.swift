@@ -114,6 +114,10 @@ struct ReviewView: View {
             .onAppear {
                 ReviewNav.shared.active = vm
                 playCurrent()
+                // Screenshot/test hook: open the Explain sheet on launch.
+                if ProcessInfo.processInfo.environment["SHOW_EXPLAIN"] == "1" {
+                    showsExplain = true
+                }
             }
             .onDisappear {
                 if ReviewNav.shared.active === vm { ReviewNav.shared.active = nil }
