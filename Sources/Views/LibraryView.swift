@@ -180,7 +180,7 @@ private struct ResumeHeroCard: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 18)
 
-            // Progress along the bottom edge.
+            // Reading position along the bottom edge.
             GeometryReader { geo in
                 VStack {
                     Spacer()
@@ -188,7 +188,7 @@ private struct ResumeHeroCard: View {
                         Rectangle().fill(.white.opacity(0.18))
                         Rectangle()
                             .fill(Color(red: 132 / 255, green: 201 / 255, blue: 166 / 255))
-                            .frame(width: geo.size.width * session.pickedRatio)
+                            .frame(width: geo.size.width * session.positionRatio)
                     }
                     .frame(height: 4)
                 }
@@ -203,7 +203,7 @@ private struct ResumeHeroCard: View {
     private var heroSubtitle: String {
         var parts: [String] = []
         if let d = session.videoDurationMs { parts.append(Session.durationLabel(ms: d)) }
-        parts.append("\(session.picks.count)/\(session.cues.count) mined")
+        parts.append("Line \(session.positionLabel)")
         return parts.joined(separator: " · ")
     }
 }
@@ -239,18 +239,18 @@ private struct LibraryRow: View {
                     .multilineTextAlignment(.leading)
 
                 HStack(spacing: 10) {
-                    // Per-item mining progress.
+                    // Reading position through the session.
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
                             Capsule().fill(Theme.line)
                             Capsule()
                                 .fill(Theme.accent)
-                                .frame(width: geo.size.width * session.pickedRatio)
+                                .frame(width: geo.size.width * session.positionRatio)
                         }
                     }
                     .frame(height: 3)
 
-                    Text("\(session.picks.count)/\(session.cues.count)")
+                    Text(session.positionLabel)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Theme.muted)
                         .fixedSize()
@@ -319,11 +319,16 @@ private struct SessionThumbnail: View {
 // MARK: - Session display helpers
 
 extension Session {
-    /// Share of lines that already yielded a pick (0…1).
-    var pickedRatio: CGFloat {
-        guard !cues.isEmpty else { return 0 }
-        let pickedCues = Set(picks.map(\.cueIndex)).count
-        return min(1, CGFloat(pickedCues) / CGFloat(cues.count))
+    /// Reading position through the session, 0…1 (last cue visited).
+    var positionRatio: CGFloat {
+        guard !cues.isEmpty, let last = lastCueIndex, last > 0 else { return 0 }
+        return min(1, CGFloat(last + 1) / CGFloat(cues.count))
+    }
+
+    /// "50/223" — the last visited line over the total.
+    var positionLabel: String {
+        let position = lastCueIndex.map { min($0 + 1, cues.count) } ?? 0
+        return "\(position)/\(cues.count)"
     }
 
     static func durationLabel(ms: Int) -> String {

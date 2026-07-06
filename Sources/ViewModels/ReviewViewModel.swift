@@ -37,12 +37,21 @@ final class ReviewViewModel: ObservableObject {
         guard canNext else { return }
         index += 1
         selection = []
+        session.lastCueIndex = index
     }
 
     func prev() {
         guard canPrev else { return }
         index -= 1
         selection = []
+        session.lastCueIndex = index
+    }
+
+    /// Persist the reading position (called when leaving the screen, so
+    /// navigation taps don't each rewrite the session file).
+    func saveProgress() {
+        session.lastCueIndex = index
+        persist()
     }
 
     /// Lemmas already in the pile for the current cue (shown as "added").

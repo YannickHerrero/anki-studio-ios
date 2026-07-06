@@ -18,6 +18,10 @@ struct ReviewView: View {
         if let raw = ProcessInfo.processInfo.environment["REVIEW_INDEX"],
            let i = Int(raw), session.cues.indices.contains(i) {
             vm.index = i
+        } else if let resume = session.lastCueIndex,
+                  session.cues.indices.contains(resume) {
+            // Continue where the user left off.
+            vm.index = resume
         }
         _vm = StateObject(wrappedValue: vm)
     }
@@ -113,6 +117,7 @@ struct ReviewView: View {
             }
             .onDisappear {
                 if ReviewNav.shared.active === vm { ReviewNav.shared.active = nil }
+                vm.saveProgress()
                 segmentPlayer.stop()
                 clipPlayer?.stop()
             }

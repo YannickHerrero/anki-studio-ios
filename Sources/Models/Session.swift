@@ -31,6 +31,9 @@ struct Session: Codable, Identifiable, Equatable {
     var picks: [Pick]
     var status: ProcessingStatus
     var errorMessage: String?
+    /// Position of the last cue the user was on — drives the Library
+    /// progress display and resume-on-open.
+    var lastCueIndex: Int?
 
     init(
         id: String = UUID().uuidString,
