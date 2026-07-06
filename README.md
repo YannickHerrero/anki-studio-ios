@@ -48,6 +48,19 @@ cloning or after changing `project.yml`.
 Keys (Settings tab) are stored in the Keychain. Requires an OpenAI key
 (Whisper) and an OpenRouter key (translation/tokens/gloss).
 
+## Licences & attribution
+
+- This repository bundles a database built from
+  [JMdict](https://www.edrdg.org/jmdict/j_jmdict.html)
+  (`Resources/dict/jmdict.sqlite`), which is the property of the
+  [Electronic Dictionary Research and Development Group](https://www.edrdg.org/)
+  and is used in conformance with the Group's
+  [licence](https://www.edrdg.org/edrdg/licence.html) (CC BY-SA 4.0).
+  Regenerate it with `Scripts/build-jmdict.py`.
+- YouTube extraction via [YouTubeKit](https://github.com/alexeichhorn/YouTubeKit).
+  Downloading YouTube content may violate YouTube's Terms of Service —
+  this app is intended for personal, sideloaded use only.
+
 ## Known v1 limits
 
 - Known-words sync from Anki is not ported (AnkiConnect doesn't exist on
