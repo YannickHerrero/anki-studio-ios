@@ -243,15 +243,18 @@ enum OpenRouterService {
 
     private static let glossSystem = """
     You are a Japanese tutor producing an interlinear gloss for a flashcard.
-    Given one Japanese sentence, break it into meaningful chunks. For each chunk:
-    - give a kana reading of the whole chunk,
-    - give a word-by-word literal gloss in order,
-    - give a short natural translation of the chunk.
-    For the word-by-word gloss:
-    - Keep verbs and adjectives in dictionary form and note the conjugation in brackets, e.g. 向いたら → "向く — to face/turn [conditional]".
-    - Split compound forms (て-form, たら, させる, …) into their separate parts rather than glossing them as one unit.
-    - Mark every particle with its grammatical function in brackets, e.g. [object], [subject], [topic], [conditional].
-    Then give one natural translation of the whole sentence, then a one–two sentence note on what the speaker is trying to convey.
+    Given one Japanese sentence, break it into meaningful chunks. For each chunk give:
+    - the chunk exactly as written (phrase) and its kana reading,
+    - a short natural translation of just this chunk (translation),
+    - a word-by-word breakdown (items), in order.
+    For each word in the breakdown:
+    - token: the word exactly as it appears in the chunk.
+    - reading: kana reading. Empty string for punctuation.
+    - base: the dictionary form, ONLY when it differs from the token (conjugated verbs/adjectives). Else empty string.
+    - en: the plain English meaning, with no grammar notes. Empty string for pure function words whose role is fully captured by the tag.
+    - tag: a short grammatical label when useful — e.g. "topic particle", "object particle", "attributive adj", "honorific · past", "conditional", "nominalizer", "て-form". Else empty string.
+    Split compound forms (て-form, たら, させる, …) into separate items rather than glossing them as one unit.
+    Then give one natural translation of the whole sentence (naturalTranslation) and a one–two sentence note on what the speaker is trying to convey (intent).
     Use kana for ALL readings — never romaji. Be concise. Return JSON that matches the schema.
     """
 
@@ -272,9 +275,11 @@ enum OpenRouterService {
                                 "properties": [
                                     "token": ["type": "string"],
                                     "reading": ["type": "string"],
-                                    "gloss": ["type": "string"],
+                                    "base": ["type": "string", "description": "Dictionary form when it differs from token, else empty."],
+                                    "en": ["type": "string", "description": "Plain English meaning, no grammar notes."],
+                                    "tag": ["type": "string", "description": "Short grammatical label, else empty."],
                                 ],
-                                "required": ["token", "reading", "gloss"],
+                                "required": ["token", "reading", "base", "en", "tag"],
                                 "additionalProperties": false,
                             ],
                         ],

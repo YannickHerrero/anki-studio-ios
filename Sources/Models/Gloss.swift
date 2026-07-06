@@ -25,6 +25,46 @@ struct GlossItem: Codable, Equatable {
     var token: String
     /// Kana reading. Empty for particles/punctuation with no reading.
     var reading: String
-    /// Literal gloss; conjugation / particle function noted in [brackets].
-    var gloss: String
+    /// Plain English meaning ("" for pure function words covered by `tag`).
+    var meaning: String
+    /// Dictionary form, only when it differs from the token.
+    var base: String?
+    /// Short grammatical label ("object particle", "honorific · past", …).
+    var tag: String?
+
+    enum CodingKeys: String, CodingKey {
+        case token, reading, base, tag
+        case meaning = "en"
+        case legacyGloss = "gloss"
+    }
+
+    init(token: String, reading: String, meaning: String, base: String? = nil, tag: String? = nil) {
+        self.token = token
+        self.reading = reading
+        self.meaning = meaning
+        self.base = base
+        self.tag = tag
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        token = try c.decode(String.self, forKey: .token)
+        reading = try c.decode(String.self, forKey: .reading)
+        // New payloads use "en"; glosses cached before the carded redesign
+        // stored the meaning (with bracketed grammar) under "gloss".
+        meaning = try c.decodeIfPresent(String.self, forKey: .meaning)
+            ?? c.decodeIfPresent(String.self, forKey: .legacyGloss)
+            ?? ""
+        base = try c.decodeIfPresent(String.self, forKey: .base)
+        tag = try c.decodeIfPresent(String.self, forKey: .tag)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(token, forKey: .token)
+        try c.encode(reading, forKey: .reading)
+        try c.encode(meaning, forKey: .meaning)
+        try c.encodeIfPresent(base, forKey: .base)
+        try c.encodeIfPresent(tag, forKey: .tag)
+    }
 }

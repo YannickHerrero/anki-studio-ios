@@ -49,7 +49,17 @@ enum AnkiFieldHTML {
             let items = c.items.map { it -> String in
                 let r = it.reading.isEmpty ? "" :
                     " <span class=\"js-gloss__token-reading\">(\(escape(it.reading)))</span>"
-                return "<li class=\"js-gloss__item\"><span class=\"js-gloss__token\">\(escape(it.token))</span>\(r) <span class=\"js-gloss__item-gloss\">\(escape(it.gloss))</span></li>"
+                // Compose the structured fields back into the card template's
+                // classic line format: "dict-form — meaning [grammar]". The
+                // Anki template markup/CSS stays byte-identical.
+                var text = it.meaning
+                if let base = it.base, !base.isEmpty {
+                    text = text.isEmpty ? base : "\(base) — \(text)"
+                }
+                if let tag = it.tag, !tag.isEmpty {
+                    text = text.isEmpty ? "[\(tag)]" : "\(text) [\(tag)]"
+                }
+                return "<li class=\"js-gloss__item\"><span class=\"js-gloss__token\">\(escape(it.token))</span>\(r) <span class=\"js-gloss__item-gloss\">\(escape(text))</span></li>"
             }.joined()
             let tr = c.translation.isEmpty ? "" :
                 "<div class=\"js-gloss__chunk-tr\">\(escape(c.translation))</div>"
