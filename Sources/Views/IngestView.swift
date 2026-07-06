@@ -87,6 +87,23 @@ struct IngestView: View {
                 }
             }
             .navigationTitle("Add")
+            .confirmationDialog(
+                "This video has Japanese subtitles",
+                isPresented: $run.showsSubsChoice,
+                titleVisibility: .visible
+            ) {
+                Button("Use YouTube subtitles") { run.chooseSubs(useExisting: true) }
+                Button("Transcribe with Whisper") { run.chooseSubs(useExisting: false) }
+            } message: {
+                Text("The uploader's subtitles are free and instant. Whisper re-transcribes with word timing (better sentence splits) but costs OpenAI credits.")
+            }
+            .onAppear {
+                // Headless test hook: start an import straight from launch env.
+                if let url = ProcessInfo.processInfo.environment["INGEST_URL"],
+                   !run.isRunning {
+                    Task { await run.run(urlString: url, settings: settings) }
+                }
+            }
         }
     }
 }

@@ -8,7 +8,9 @@ final class IngestRun: ObservableObject {
     enum Phase: String {
         case idle = "Idle"
         case probing = "Looking up video"
+        case awaitingSubsChoice = "Japanese subtitles found"
         case downloading = "Downloading video"
+        case fetchingSubs = "Fetching subtitles"
         case extractingAudio = "Extracting audio"
         case transcribing = "Transcribing (Whisper)"
         case translating = "Translating"
@@ -22,6 +24,30 @@ final class IngestRun: ObservableObject {
     @Published var progress: Double? // 0…1 within the current phase, when known
     @Published var detail: String = ""
     @Published var errorMessage: String?
+    /// Non-nil while the pipeline waits for the user to pick uploader
+    /// subtitles vs Whisper (the desktop's pre-ingest modal).
+    @Published var showsSubsChoice = false
+
+    private var subsContinuation: CheckedContinuation<Bool, Never>?
+
+    /// Resolve the subtitles-vs-Whisper prompt.
+    func chooseSubs(useExisting: Bool) {
+        showsSubsChoice = false
+        subsContinuation?.resume(returning: useExisting)
+        subsContinuation = nil
+    }
+
+    /// Suspend until the user picks, unless a test hook pre-answers.
+    private func awaitSubsChoice() async -> Bool {
+        if let forced = ProcessInfo.processInfo.environment["SUBS_CHOICE"] {
+            return forced == "subs"
+        }
+        setPhase(.awaitingSubsChoice)
+        return await withCheckedContinuation { cont in
+            subsContinuation = cont
+            showsSubsChoice = true
+        }
+    }
 
     var isRunning: Bool {
         switch phase {
@@ -52,6 +78,16 @@ final class IngestRun: ObservableObject {
             // 1. Probe + create the session.
             setPhase(.probing)
             let probe = try await YouTubeService.probe(urlString: urlString)
+
+            // Uploader-provided Japanese subtitles? Ask before the heavy work,
+            // like the desktop's pre-ingest modal. Auto-captions don't count.
+            let tracks = (try? await CaptionsService.listTracks(videoID: probe.videoID)) ?? []
+            var subsTrack = CaptionsService.manualJapanese(in: tracks)
+            if subsTrack != nil {
+                let useSubs = await awaitSubsChoice()
+                if !useSubs { subsTrack = nil }
+            }
+
             var session = Session(source: .youtube, title: probe.title, youtubeURL: urlString)
             session.status = .processing
             try Storage.ensureSessionDirs(session.id)
@@ -68,17 +104,22 @@ final class IngestRun: ObservableObject {
             session.videoDurationMs = try await MediaService.durationMs(of: videoURL)
             session = try store.save(session)
 
-            // 3. Mono 16k audio for Whisper.
-            setPhase(.extractingAudio)
-            let fullAudio = Storage.fullAudioURL(session.id)
-            try await MediaService.extractFullAudio(video: videoURL, to: fullAudio)
+            // 3+4. Cues: uploader subtitles when chosen, otherwise Whisper
+            //      (extract mono 16k audio → transcribe → sentence split).
+            if let subsTrack {
+                setPhase(.fetchingSubs)
+                session.cues = try await CaptionsService.fetchCues(track: subsTrack)
+            } else {
+                setPhase(.extractingAudio)
+                let fullAudio = Storage.fullAudioURL(session.id)
+                try await MediaService.extractFullAudio(video: videoURL, to: fullAudio)
 
-            // 4. Transcribe → sentence cues.
-            setPhase(.transcribing)
-            let transcript = try await WhisperService.transcribe(
-                audio: fullAudio, apiKey: settings.openaiKey.trimmed)
-            guard !transcript.cues.isEmpty else { throw WhisperError.empty }
-            session.cues = transcript.cues
+                setPhase(.transcribing)
+                let transcript = try await WhisperService.transcribe(
+                    audio: fullAudio, apiKey: settings.openaiKey.trimmed)
+                guard !transcript.cues.isEmpty else { throw WhisperError.empty }
+                session.cues = transcript.cues
+            }
             session = try store.save(session)
 
             let llm = OpenRouterService.Options(
