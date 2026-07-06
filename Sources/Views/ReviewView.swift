@@ -10,6 +10,7 @@ struct ReviewView: View {
     @StateObject private var segmentPlayer = SegmentPlayer()
     @State private var clipPlayer: AVAudioPlayer?
     @State private var dictionaryToken: RefinedToken?
+    @State private var showsExplain = false
 
     init(session: Session) {
         let vm = ReviewViewModel(session: session)
@@ -74,11 +75,27 @@ struct ReviewView: View {
                 DictionarySheet(token: token)
             }
             .toolbar {
+                // Explain this line (interlinear gloss) — desktop's Explain tab.
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showsExplain = true
+                    } label: {
+                        Label("Explain", systemImage: "text.bubble")
+                    }
+                    .disabled(vm.current == nil)
+                }
                 ToolbarItem(placement: .primaryAction) {
                     NavigationLink {
                         PileView(vm: vm)
                     } label: {
                         Label("Pile (\(vm.session.picks.count))", systemImage: "tray.full")
+                    }
+                }
+            }
+            .sheet(isPresented: $showsExplain) {
+                if let cue = vm.current {
+                    ExplainSheet(cue: cue) { gloss in
+                        vm.setGloss(gloss, forCueIndex: cue.index)
                     }
                 }
             }
