@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// Top-level tab bar. Mirrors the desktop app's flow: add a source, review &
-/// mine, then export the pile.
+/// Top-level tab bar: add a source, browse the library of sessions (the main
+/// navigation between videos), and settings.
 struct RootTabView: View {
     @State private var selection = 0
 
@@ -11,8 +11,8 @@ struct RootTabView: View {
                 .tabItem { Label("Add", systemImage: "plus.circle") }
                 .tag(0)
 
-            ReviewTab()
-                .tabItem { Label("Review", systemImage: "rectangle.stack") }
+            LibraryTab()
+                .tabItem { Label("Library", systemImage: "books.vertical") }
                 .tag(1)
 
             SettingsView()
@@ -20,7 +20,7 @@ struct RootTabView: View {
                 .tag(2)
         }
         .onAppear {
-            // UI-test / screenshot hook: seed a demo session and open Review.
+            // UI-test / screenshot hook: seed a demo session and open Library.
             if ProcessInfo.processInfo.environment["SEED_DEMO"] == "1" {
                 if SessionStore.shared.sessions.isEmpty {
                     DemoSession.create(into: .shared)
@@ -31,20 +31,25 @@ struct RootTabView: View {
     }
 }
 
-/// Shows the most recent session for review, or an empty state.
-private struct ReviewTab: View {
-    @ObservedObject private var store = SessionStore.shared
+/// Library wrapper that supports the REVIEW_INDEX screenshot hook: when set,
+/// it pushes straight into review for the newest session on launch.
+private struct LibraryTab: View {
+    @State private var autoOpened = false
 
     var body: some View {
-        if let session = store.sessions.first {
-            ReviewView(session: session)
-                .id(session.id)
+        if ProcessInfo.processInfo.environment["REVIEW_INDEX"] != nil,
+           !autoOpened, let first = SessionStore.shared.sessions.first {
+            NavigationStack {
+                ReviewView(session: first)
+                    .id(first.id)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Library") { autoOpened = true }
+                        }
+                    }
+            }
         } else {
-            ContentUnavailableView(
-                "No session yet",
-                systemImage: "play.rectangle",
-                description: Text("Add a video — or load the demo — from the Add tab.")
-            )
+            LibraryView()
         }
     }
 }

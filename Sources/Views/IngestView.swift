@@ -70,21 +70,6 @@ struct IngestView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                if !store.sessions.isEmpty {
-                    Section("Sessions") {
-                        ForEach(store.sessions) { session in
-                            VStack(alignment: .leading) {
-                                Text(session.title ?? "Untitled").font(.subheadline)
-                                Text("\(session.cues.count) lines · \(session.picks.count) picked · \(session.status.rawValue)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .onDelete { offsets in
-                            offsets.map { store.sessions[$0].id }.forEach(store.delete)
-                        }
-                    }
-                }
             }
             .navigationTitle("Add")
             .confirmationDialog(
