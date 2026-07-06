@@ -9,6 +9,7 @@ struct ReviewView: View {
     @StateObject private var vm: ReviewViewModel
     @StateObject private var segmentPlayer = SegmentPlayer()
     @State private var clipPlayer: AVAudioPlayer?
+    @State private var dictionaryToken: RefinedToken?
 
     init(session: Session) {
         let vm = ReviewViewModel(session: session)
@@ -64,6 +65,9 @@ struct ReviewView: View {
             .onAppear { playCurrent() }
             .onDisappear { segmentPlayer.stop(); clipPlayer?.stop() }
             .onChange(of: vm.index) { playCurrent() }
+            .sheet(item: $dictionaryToken) { token in
+                DictionarySheet(token: token)
+            }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     NavigationLink {
@@ -125,23 +129,22 @@ struct ReviewView: View {
         if token.content {
             let picked = vm.pickedLemmasForCurrent.contains(token.lemma)
             let selected = vm.isSelected(index)
-            Button {
-                vm.toggle(index)
-            } label: {
-                Text(token.surface)
-                    .font(.system(size: 26, weight: .medium))
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 2)
-                    .background(selected ? Color.accentColor.opacity(0.25) : Color.clear)
-                    .overlay(alignment: .bottom) {
-                        Rectangle()
-                            .fill(picked ? Color.green : Color.accentColor.opacity(0.5))
-                            .frame(height: 2)
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(picked ? Color.green : Color.primary)
+            Text(token.surface)
+                .font(.system(size: 26, weight: .medium))
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
+                .background(selected ? Color.accentColor.opacity(0.25) : Color.clear)
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(picked ? Color.green : Color.accentColor.opacity(0.5))
+                        .frame(height: 2)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .foregroundStyle(picked ? Color.green : Color.primary)
+                .contentShape(Rectangle())
+                // Tap = select for the pile; long-press = yomitan-style lookup.
+                .onTapGesture { vm.toggle(index) }
+                .onLongPressGesture { dictionaryToken = token }
         } else {
             Text(token.surface)
                 .font(.system(size: 26))

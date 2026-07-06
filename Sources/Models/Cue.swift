@@ -30,7 +30,7 @@ struct Cue: Codable, Identifiable, Equatable {
 
 /// A tokenized word with dictionary form + reading (from the LLM refine pass
 /// or the on-device tokenizer).
-struct RefinedToken: Codable, Equatable {
+struct RefinedToken: Codable, Equatable, Identifiable {
     var surface: String
     /// Dictionary form. For particles/punctuation, equal to `surface`.
     var lemma: String
@@ -38,4 +38,7 @@ struct RefinedToken: Codable, Equatable {
     var reading: String
     /// True for nouns/verbs/adjectives/adverbs/connectives.
     var content: Bool
+
+    /// Stable enough for sheet presentation (same word → same entry anyway).
+    var id: String { "\(surface)|\(lemma)" }
 }

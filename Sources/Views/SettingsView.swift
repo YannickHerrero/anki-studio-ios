@@ -32,6 +32,14 @@ struct SettingsView: View {
                         .autocorrectionDisabled()
                 }
 
+                Section {
+                    Text("Dictionary data from [JMdict](https://www.edrdg.org/jmdict/j_jmdict.html), property of the Electronic Dictionary Research and Development Group, used under the Group's licence.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } header: {
+                    Text("About")
+                }
+
                 Section("Status") {
                     LabeledContent("OpenRouter") {
                         StatusBadge(ok: settings.isConfigured,
