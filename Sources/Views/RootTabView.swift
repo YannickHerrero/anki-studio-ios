@@ -7,16 +7,25 @@ struct RootTabView: View {
     @ObservedObject private var reviewNav = ReviewNav.shared
 
     var body: some View {
-        tabs
-            // The card template's green drives the whole app.
-            .tint(Theme.accent)
-            .onAppear {
-                // UI-test / screenshot hook: seed a demo session when empty.
-                if ProcessInfo.processInfo.environment["SEED_DEMO"] == "1",
-                   SessionStore.shared.sessions.isEmpty {
-                    DemoSession.create(into: .shared)
-                }
+        Group {
+            // Screenshot/test hooks: render a screen directly as the root.
+            if ProcessInfo.processInfo.environment["SHOW_SETTINGS"] == "1" {
+                NavigationStack { SettingsView() }
+            } else if ProcessInfo.processInfo.environment["SHOW_STORAGE"] == "1" {
+                NavigationStack { SessionStorageView() }
+            } else {
+                tabs
             }
+        }
+        // The card template's green drives the whole app.
+        .tint(Theme.accent)
+        .onAppear {
+            // UI-test / screenshot hook: seed a demo session when empty.
+            if ProcessInfo.processInfo.environment["SEED_DEMO"] == "1",
+               SessionStore.shared.sessions.isEmpty {
+                DemoSession.create(into: .shared)
+            }
+        }
     }
 
     @ViewBuilder

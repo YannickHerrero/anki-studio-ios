@@ -9,6 +9,7 @@ struct LibraryView: View {
     @StateObject private var ingestRun = IngestRun()
     @ObservedObject private var settings = AppSettings.shared
     @State private var showsAdd = false
+    @State private var showsSettings = false
 
     var body: some View {
         NavigationStack {
@@ -30,8 +31,8 @@ struct LibraryView: View {
             .navigationTitle("Library")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    NavigationLink {
-                        SettingsView()
+                    Button {
+                        showsSettings = true
                     } label: {
                         Label("Settings", systemImage: "gearshape")
                     }
@@ -48,8 +49,11 @@ struct LibraryView: View {
             .sheet(isPresented: $showsAdd) {
                 AddVideoSheet(run: ingestRun)
             }
+            .navigationDestination(isPresented: $showsSettings) {
+                SettingsView()
+            }
             .onAppear {
-                // Headless test hook: start an import straight from launch env.
+                // Headless test hooks: start an import / open Settings.
                 if let url = ProcessInfo.processInfo.environment["INGEST_URL"],
                    !ingestRun.isRunning {
                     Task { await ingestRun.run(urlString: url, settings: settings) }
