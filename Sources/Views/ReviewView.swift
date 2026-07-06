@@ -104,6 +104,9 @@ struct ReviewView: View {
             // The media now lives inside the card, so the bar sits on paper.
             .toolbarBackground(Theme.page, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+            // Hide the tab bar while reviewing so the Liquid Glass line
+            // accessory is the single bottom element (same line, no stack).
+            .toolbar(.hidden, for: .tabBar)
             .onAppear {
                 ReviewNav.shared.active = vm
                 playCurrent()
