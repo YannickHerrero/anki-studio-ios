@@ -20,6 +20,10 @@ enum Theme {
     static let accent = dynamic(0x3F7D5F, 0x84C9A6)
     /// Video letterbox (`--videoBg`).
     static let videoBg = Color(rgb: 0x15140F)
+    /// Bottom-sheet background (Explain mock).
+    static let sheetBg = dynamic(0xEDEBE6, 0x141519)
+    /// Tinted meaning card on the Explain sheet.
+    static let meaningBg = dynamic(0xEBF2EE, 0x1B2620)
 
     /// The card's Japanese face; falls back to the system font if missing.
     static func jp(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
