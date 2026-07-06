@@ -10,7 +10,7 @@ struct ReviewView: View {
     @StateObject private var segmentPlayer = SegmentPlayer()
     @State private var clipPlayer: AVAudioPlayer?
     @State private var dictionaryToken: RefinedToken?
-    @State private var showsExplain = false
+    @State private var explainCue: Cue?
     @State private var cardDrag: CGFloat = 0
 
     init(session: Session) {
@@ -125,7 +125,7 @@ struct ReviewView: View {
                 playCurrent()
                 // Screenshot/test hook: open the Explain sheet on launch.
                 if ProcessInfo.processInfo.environment["SHOW_EXPLAIN"] == "1" {
-                    showsExplain = true
+                    explainCue = vm.current
                 }
             }
             .onDisappear {
@@ -143,7 +143,7 @@ struct ReviewView: View {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         Haptics.tap()
-                        showsExplain = true
+                        explainCue = vm.current
                     } label: {
                         Label("Explain", systemImage: "text.bubble")
                     }
@@ -157,11 +157,9 @@ struct ReviewView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showsExplain) {
-                if let cue = vm.current {
-                    ExplainSheet(cue: cue) { gloss in
-                        vm.setGloss(gloss, forCueIndex: cue.index)
-                    }
+            .sheet(item: $explainCue) { cue in
+                ExplainSheet(cue: cue) { gloss in
+                    vm.setGloss(gloss, forCueIndex: cue.index)
                 }
             }
         }

@@ -5,8 +5,14 @@ struct PileView: View {
     @ObservedObject var vm: ReviewViewModel
     @ObservedObject private var settings = AppSettings.shared
 
-    @State private var exportURL: URL?
-    @State private var showShare = false
+    /// Identifiable wrapper so the share sheet is item-driven — an
+    /// isPresented sheet can render against a stale nil URL and stay empty.
+    private struct ExportFile: Identifiable {
+        let url: URL
+        var id: String { url.path }
+    }
+
+    @State private var exportFile: ExportFile?
     @State private var exportError: String?
 
     var body: some View {
@@ -48,8 +54,8 @@ struct PileView: View {
                     .disabled(vm.session.picks.isEmpty)
             }
         }
-        .sheet(isPresented: $showShare) {
-            if let url = exportURL { ShareSheet(items: [url]) }
+        .sheet(item: $exportFile) { file in
+            ShareSheet(items: [file.url])
         }
         .alert("Export failed", isPresented: Binding(
             get: { exportError != nil },
@@ -63,9 +69,9 @@ struct PileView: View {
 
     private func export() {
         do {
-            exportURL = try ExportService.build(session: vm.session, deckName: settings.deckName)
+            let url = try ExportService.build(session: vm.session, deckName: settings.deckName)
             Haptics.success()
-            showShare = true
+            exportFile = ExportFile(url: url)
         } catch {
             Haptics.warning()
             exportError = String(describing: error)
