@@ -1,14 +1,42 @@
 import SwiftUI
 import AVKit
+import UIKit
 
 /// The review + mining screen: media on top, the tokenized sentence below with
 /// tap-to-select words, and an add-to-pile action. Touch-first port of the
 /// desktop ReviewView.
 struct ReviewView: View {
     @StateObject private var vm: ReviewViewModel
+    @StateObject private var segmentPlayer = SegmentPlayer()
+    @State private var clipPlayer: AVAudioPlayer?
 
     init(session: Session) {
-        _vm = StateObject(wrappedValue: ReviewViewModel(session: session))
+        let vm = ReviewViewModel(session: session)
+        // Debug/screenshot hook: jump straight to a given cue index.
+        if let raw = ProcessInfo.processInfo.environment["REVIEW_INDEX"],
+           let i = Int(raw), session.cues.indices.contains(i) {
+            vm.index = i
+        }
+        _vm = StateObject(wrappedValue: vm)
+    }
+
+    private var videoURL: URL? {
+        let url = Storage.videoURL(vm.session.id, ext: vm.session.videoExt)
+        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
+    /// Play the current cue: video segment when the video is present,
+    /// otherwise the pre-cut audio clip.
+    private func playCurrent() {
+        guard let cue = vm.current else { return }
+        if let videoURL {
+            segmentPlayer.load(videoURL)
+            segmentPlayer.playSegment(startMs: cue.startMs, endMs: cue.endMs)
+        } else {
+            let clip = Storage.audioURL(vm.session.id, cue.index)
+            clipPlayer = try? AVAudioPlayer(contentsOf: clip)
+            clipPlayer?.play()
+        }
     }
 
     var body: some View {
@@ -33,6 +61,9 @@ struct ReviewView: View {
             }
             .navigationTitle(vm.current.map { "Line \($0.index + 1) / \(vm.session.cues.count)" } ?? "Review")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear { playCurrent() }
+            .onDisappear { segmentPlayer.stop(); clipPlayer?.stop() }
+            .onChange(of: vm.index) { playCurrent() }
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     NavigationLink {
@@ -47,20 +78,37 @@ struct ReviewView: View {
 
     @ViewBuilder
     private var mediaArea: some View {
-        let videoURL = Storage.videoURL(vm.session.id, ext: vm.session.videoExt)
-        if FileManager.default.fileExists(atPath: videoURL.path) {
-            VideoPlayer(player: AVPlayer(url: videoURL))
-        } else {
-            VStack(spacing: 8) {
-                Image(systemName: "film")
-                    .font(.system(size: 34))
-                    .foregroundStyle(.white.opacity(0.5))
-                if let cue = vm.current {
-                    Text(timeLabel(cue))
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.white.opacity(0.6))
+        ZStack(alignment: .bottomLeading) {
+            if videoURL != nil {
+                VideoPlayer(player: segmentPlayer.player)
+            } else if let cue = vm.current,
+                      let image = UIImage(contentsOfFile: Storage.screenshotURL(vm.session.id, cue.index).path) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                VStack(spacing: 8) {
+                    Image(systemName: "film")
+                        .font(.system(size: 34))
+                        .foregroundStyle(.white.opacity(0.5))
+                    if let cue = vm.current {
+                        Text(timeLabel(cue))
+                            .font(.caption.monospaced())
+                            .foregroundStyle(.white.opacity(0.6))
+                    }
                 }
             }
+
+            // Replay the cue's segment (Space on desktop).
+            Button {
+                playCurrent()
+            } label: {
+                Image(systemName: "arrow.counterclockwise.circle.fill")
+                    .font(.system(size: 30))
+                    .foregroundStyle(.white, .black.opacity(0.45))
+            }
+            .padding(10)
         }
     }
 
