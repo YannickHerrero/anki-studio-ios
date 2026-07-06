@@ -154,13 +154,6 @@ private struct ChunkCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.panel)
-        // The green spine — laid down BEFORE the clip so the rounded corners
-        // cut it to the card's curve (the mock's border-left + overflow:hidden).
-        .overlay(alignment: .leading) {
-            Rectangle()
-                .fill(Theme.accent)
-                .frame(width: 3)
-        }
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.line, lineWidth: 0.5))
         .shadow(color: .black.opacity(0.05), radius: 3, y: 1)
