@@ -53,10 +53,14 @@ struct LibraryView: View {
                 SettingsView()
             }
             .onAppear {
-                // Headless test hooks: start an import / open Settings.
+                // Headless test hook: start an import straight from launch env.
                 if let url = ProcessInfo.processInfo.environment["INGEST_URL"],
                    !ingestRun.isRunning {
-                    Task { await ingestRun.run(urlString: url, settings: settings) }
+                    Task {
+                        if let prepared = await ingestRun.prepare(urlString: url) {
+                            ingestRun.start(prepared, settings: settings)
+                        }
+                    }
                 }
             }
         }
@@ -80,6 +84,8 @@ struct LibraryView: View {
                         ResumeHeroCard(session: hero)
                     }
                     .buttonStyle(.plain)
+                    .disabled(hero.status != .ready)
+                    .opacity(hero.status == .ready ? 1 : 0.55)
                     .contextMenu {
                         Button(role: .destructive) {
                             store.delete(hero.id)
@@ -114,6 +120,8 @@ struct LibraryView: View {
                                 LibraryRow(session: session, showsSeparator: i < rest.count - 1)
                             }
                             .buttonStyle(.plain)
+                            .disabled(session.status != .ready)
+                            .opacity(session.status == .ready ? 1 : 0.55)
                             .contextMenu {
                                 Button(role: .destructive) {
                                     store.delete(session.id)

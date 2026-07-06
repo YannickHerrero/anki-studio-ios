@@ -24,7 +24,14 @@ struct AddVideoSheet: View {
                         .disabled(run.isRunning)
                     Button {
                         Haptics.tap()
-                        Task { await run.run(urlString: url, settings: settings) }
+                        Task {
+                            // Quick probe + subtitle question happen here in
+                            // the sheet; the long pipeline then runs as a
+                            // background-capable task.
+                            if let prepared = await run.prepare(urlString: url) {
+                                run.start(prepared, settings: settings)
+                            }
+                        }
                     } label: {
                         Label("Import video", systemImage: "arrow.down.circle")
                     }
@@ -33,7 +40,7 @@ struct AddVideoSheet: View {
                     if !settings.isYoutubeReady {
                         Text("Add your OpenAI and OpenRouter keys in Settings to enable import.")
                     } else {
-                        Text("Downloads the video and builds cards entirely on-device. You can close this sheet — the import keeps running.")
+                        Text("Downloads the video and builds cards entirely on-device. You can close this sheet or leave the app — the import keeps running with its progress in the Dynamic Island.")
                     }
                 }
 

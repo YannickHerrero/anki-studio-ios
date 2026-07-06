@@ -26,6 +26,10 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         # No custom crypto — skips App Store Connect's export-compliance prompt.
         ITSAppUsesNonExemptEncryption: false
+        # Background-continued imports (iOS 26 BGContinuedProcessingTask).
+        UIBackgroundModes: [processing]
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.yannickherrero.ankistudio.import
         UIAppFonts:
           - ZenKakuGothicNew-Regular.ttf
           - ZenKakuGothicNew-Medium.ttf
