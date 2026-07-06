@@ -52,7 +52,10 @@ Keys (Settings tab) are stored in the Keychain. Requires an OpenAI key
 
 - Known-words sync from Anki is not ported (AnkiConnect doesn't exist on
   iOS) — every word starts unmarked.
-- Always transcribes with Whisper (no uploader-subtitle path yet).
+- When the uploader ships manual Japanese subtitles you're asked whether
+  to keep them (free, instant) or re-transcribe with Whisper; auto
+  captions never count. Subtitle download uses YouTube's InnerTube API
+  with a pinned client version that may need occasional bumping.
 - Videos offering only VP9/WebM streams are rejected (AVFoundation needs
   H.264 mp4); most videos offer a progressive mp4.
 - Long videos are limited by Whisper's 25 MB audio ceiling (~2h at the
