@@ -156,7 +156,7 @@ enum OpenRouterService {
     - Keep proper nouns (names, places, brand names) as single tokens.
     - Particles (は / を / が / と / に / で / の / も / よ / ね / か), punctuation, and auxiliaries that didn't merge into a verb are separate tokens with content=false.
 
-    Do NOT invent words that aren't in the sentence.
+    You also receive an automatic tokenization as a hint. Use it as a starting point but correct over-segmentation, mis-tagged content, and missed proper-noun groupings. Do NOT invent words that aren't in the sentence.
 
     Return JSON matching the schema. Order: same as input. cueIndex must match the input index for each entry.
     """
@@ -194,10 +194,12 @@ enum OpenRouterService {
         "additionalProperties": false,
     ]
 
-    /// Tokenize a batch of cues. Entries whose surfaces don't re-concatenate to
-    /// the source sentence are dropped (the model corrupted them).
+    /// Tokenize a batch of cues, feeding the local tokenization as a hint
+    /// (as the desktop feeds kuromoji's). Entries whose surfaces don't
+    /// re-concatenate to the source sentence are dropped (model corrupted
+    /// them); non-Japanese tokens are never content (desktop HAS_JAPANESE).
     static func refineTokenBatch(
-        _ items: [(cueIndex: Int, sentence: String)], opts: Options
+        _ items: [(cueIndex: Int, sentence: String, hint: [RefinedToken])], opts: Options
     ) async throws -> [Int: [RefinedToken]] {
         guard !items.isEmpty else { return [:] }
 
@@ -207,7 +209,12 @@ enum OpenRouterService {
         }
 
         let numbered = items
-            .map { "cueIndex=\($0.cueIndex)\nsentence=\($0.sentence)" }
+            .map { item in
+                let hint = item.hint
+                    .map { "\($0.surface)(\($0.content ? "content" : "func"))" }
+                    .joined(separator: " ")
+                return "cueIndex=\(item.cueIndex)\nsentence=\(item.sentence)\nhint=\(hint)"
+            }
             .joined(separator: "\n---\n")
         let data = try await chatJSON(
             system: refineTokensSystem, user: numbered,
@@ -220,7 +227,14 @@ enum OpenRouterService {
             guard let source = sourceByIdx[entry.cueIndex], !entry.tokens.isEmpty else { continue }
             let concat = entry.tokens.map(\.surface).joined()
             guard concat == source else { continue } // Drop — surfaces corrupted.
-            out[entry.cueIndex] = entry.tokens
+            out[entry.cueIndex] = entry.tokens.map { token in
+                var t = token
+                let hasJapanese = t.surface.unicodeScalars.contains {
+                    (0x3040...0x30FF).contains(Int($0.value)) || (0x4E00...0x9FFF).contains(Int($0.value))
+                }
+                if !hasJapanese { t.content = false }
+                return t
+            }
         }
         return out
     }

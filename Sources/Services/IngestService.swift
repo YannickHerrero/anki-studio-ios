@@ -149,12 +149,15 @@ final class IngestRun: ObservableObject {
             var start = 0
             while start < session.cues.count {
                 let end = min(start + batchSize, session.cues.count)
-                let batch = session.cues[start..<end].map { (cueIndex: $0.index, sentence: $0.text) }
-                let refined = (try? await OpenRouterService.refineTokenBatch(batch, opts: llm)) ?? [:]
-                for i in start..<end {
-                    let cue = session.cues[i]
+                // Local tokenization first: it is the LLM's hint (as kuromoji
+                // is on desktop) and the fallback when an entry gets dropped.
+                let local = session.cues[start..<end].map {
+                    (cueIndex: $0.index, sentence: $0.text, hint: TokenizerService.tokenize($0.text))
+                }
+                let refined = (try? await OpenRouterService.refineTokenBatch(local, opts: llm)) ?? [:]
+                for (offset, i) in (start..<end).enumerated() {
                     session.cues[i].refinedTokens =
-                        refined[cue.index] ?? TokenizerService.tokenize(cue.text)
+                        refined[session.cues[i].index] ?? local[offset].hint
                 }
                 start = end
                 progress = Double(start) / Double(session.cues.count)
