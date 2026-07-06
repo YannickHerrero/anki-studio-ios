@@ -78,6 +78,7 @@ struct ReviewView: View {
                 // Explain this line (interlinear gloss) — desktop's Explain tab.
                 ToolbarItem(placement: .primaryAction) {
                     Button {
+                        Haptics.tap()
                         showsExplain = true
                     } label: {
                         Label("Explain", systemImage: "text.bubble")
@@ -128,6 +129,7 @@ struct ReviewView: View {
 
             // Replay the cue's segment (Space on desktop).
             Button {
+                Haptics.tap()
                 playCurrent()
             } label: {
                 Image(systemName: "arrow.counterclockwise.circle.fill")
@@ -172,9 +174,16 @@ struct ReviewView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 4))
                 .foregroundStyle(picked ? Color.green : Color.primary)
                 .contentShape(Rectangle())
-                // Tap = select for the pile; long-press = yomitan-style lookup.
-                .onTapGesture { vm.toggle(index) }
-                .onLongPressGesture { dictionaryToken = token }
+                // Tap = yomitan-style lookup; long-press = toggle in the
+                // multi-select (committed by the add-to-pile button).
+                .onTapGesture {
+                    Haptics.tap()
+                    dictionaryToken = token
+                }
+                .onLongPressGesture {
+                    Haptics.select()
+                    vm.toggle(index)
+                }
         } else {
             Text(token.surface)
                 .font(.system(size: 26))
@@ -193,10 +202,11 @@ struct ReviewView: View {
 
     private var addButton: some View {
         Button {
+            Haptics.success()
             vm.commitPicks()
         } label: {
             Label(
-                vm.selectedCount == 0 ? "Tap words to add" : "Add \(vm.selectedCount) to pile",
+                vm.selectedCount == 0 ? "Hold words to select" : "Add \(vm.selectedCount) to pile",
                 systemImage: "plus.circle.fill"
             )
             .frame(maxWidth: .infinity)
@@ -208,12 +218,18 @@ struct ReviewView: View {
 
     private var controls: some View {
         HStack {
-            Button { vm.prev() } label: {
+            Button {
+                Haptics.tap()
+                vm.prev()
+            } label: {
                 Image(systemName: "chevron.left").frame(maxWidth: .infinity)
             }
             .disabled(!vm.canPrev)
 
-            Button { vm.next() } label: {
+            Button {
+                Haptics.tap()
+                vm.next()
+            } label: {
                 Image(systemName: "chevron.right").frame(maxWidth: .infinity)
             }
             .disabled(!vm.canNext)

@@ -64,8 +64,10 @@ struct PileView: View {
     private func export() {
         do {
             exportURL = try ExportService.build(session: vm.session, deckName: settings.deckName)
+            Haptics.success()
             showShare = true
         } catch {
+            Haptics.warning()
             exportError = String(describing: error)
         }
     }
