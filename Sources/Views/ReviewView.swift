@@ -11,6 +11,7 @@ struct ReviewView: View {
     @State private var clipPlayer: AVAudioPlayer?
     @State private var dictionaryToken: RefinedToken?
     @State private var showsExplain = false
+    @State private var cardDrag: CGFloat = 0
 
     init(session: Session) {
         let vm = ReviewViewModel(session: session)
@@ -91,6 +92,14 @@ struct ReviewView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 11))
                     .overlay(RoundedRectangle(cornerRadius: 11).stroke(Theme.line))
                     .shadow(color: .black.opacity(0.10), radius: 18, y: 8)
+                    // Tinder-style swipe between cues: follows the finger with
+                    // a slight lean, flies off past the threshold. 20pt
+                    // minimum distance keeps taps/double-taps/long-press
+                    // intact, and the horizontal-dominance check leaves
+                    // vertical scrolling to the ScrollView.
+                    .offset(x: cardDrag)
+                    .rotationEffect(.degrees(cardLean), anchor: .bottom)
+                    .simultaneousGesture(swipeGesture)
                     .padding(16)
                 }
                 .background(Theme.page)
@@ -270,6 +279,54 @@ struct ReviewView: View {
         .controlSize(.large)
         .tint(Theme.accent)
         .disabled(vm.selectedCount == 0)
+    }
+
+    // MARK: - Swipe navigation
+
+    /// Slight Tinder lean, proportional to the drag, capped at ±9°.
+    private var cardLean: Double {
+        max(-9, min(9, Double(cardDrag / 22)))
+    }
+
+    private var swipeGesture: some Gesture {
+        DragGesture(minimumDistance: 20)
+            .onChanged { value in
+                let t = value.translation
+                // Only claim horizontally-dominant drags.
+                guard abs(t.width) > abs(t.height) else { return }
+                let canMove = t.width < 0 ? vm.canNext : vm.canPrev
+                // Rubber-band at the first/last cue.
+                cardDrag = canMove ? t.width : t.width * 0.3
+            }
+            .onEnded { value in
+                let t = value.translation.width
+                if t < -100, vm.canNext {
+                    swipeCard(toNext: true)
+                } else if t > 100, vm.canPrev {
+                    swipeCard(toNext: false)
+                } else {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
+                        cardDrag = 0
+                    }
+                }
+            }
+    }
+
+    /// Fly the card off-screen, swap the cue, spring the new one in from the
+    /// opposite edge.
+    private func swipeCard(toNext: Bool) {
+        Haptics.tap()
+        withAnimation(.easeIn(duration: 0.18)) {
+            cardDrag = toNext ? -560 : 560
+        }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(190))
+            if toNext { vm.next() } else { vm.prev() }
+            cardDrag = toNext ? 340 : -340
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                cardDrag = 0
+            }
+        }
     }
 
     private var controls: some View {
