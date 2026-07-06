@@ -36,15 +36,14 @@ struct RootTabView: View {
         }
     }
 
+    // A single-tab TabView with the bar hidden: the Library owns the screen
+    // (Settings lives behind its gear button), while the TabView shell keeps
+    // the Liquid Glass bottom accessory available for review.
     private var baseTabs: some View {
         TabView(selection: $selection) {
             LibraryTab()
-                .tabItem { Label("Library", systemImage: "books.vertical") }
+                .toolbar(.hidden, for: .tabBar)
                 .tag(0)
-
-            SettingsView()
-                .tabItem { Label("Settings", systemImage: "gearshape") }
-                .tag(1)
         }
     }
 }

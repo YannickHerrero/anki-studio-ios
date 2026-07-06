@@ -4,8 +4,8 @@ struct SettingsView: View {
     @ObservedObject private var settings = AppSettings.shared
 
     var body: some View {
-        NavigationStack {
-            Form {
+        // Pushed from the Library's gear button, so no NavigationStack of its own.
+        Form {
                 Section {
                     SecureField("OpenRouter API key", text: $settings.openrouterKey)
                         .textInputAutocapitalization(.never)
@@ -51,10 +51,9 @@ struct SettingsView: View {
                     }
                 }
             }
-            .scrollContentBackground(.hidden)
-            .background(Theme.page)
-            .navigationTitle("Settings")
-        }
+        .scrollContentBackground(.hidden)
+        .background(Theme.page)
+        .navigationTitle("Settings")
     }
 }
 
