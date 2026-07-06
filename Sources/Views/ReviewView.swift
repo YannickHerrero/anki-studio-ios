@@ -44,36 +44,45 @@ struct ReviewView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                mediaArea
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 210)
-                    .background(Theme.videoBg)
-
-                // The content mirrors the Anki card: a floating panel on the
-                // warm paper background, with rule-labelled sections.
+                // The content mirrors the Anki card: one floating panel on the
+                // warm paper background — media as the card's top section
+                // (like the card screenshot, hairline under it, audio pill
+                // overlaid), then the rule-labelled sections.
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        VStack(alignment: .leading, spacing: 14) {
-                            RuleLabel(text: "Context")
-                            sentenceBlock
-                                .frame(maxWidth: .infinity)
-                        }
+                    VStack(alignment: .leading, spacing: 0) {
+                        mediaArea
+                            .frame(maxWidth: .infinity)
+                            .aspectRatio(16 / 9, contentMode: .fit)
+                            .background(Theme.videoBg)
+                            .clipped()
 
-                        if let tr = vm.current?.translation, !tr.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                RuleLabel(text: "Meaning")
-                                Text(tr)
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(Theme.ink)
+                        Rectangle()
+                            .fill(Theme.line)
+                            .frame(height: 1)
+
+                        VStack(alignment: .leading, spacing: 18) {
+                            VStack(alignment: .leading, spacing: 14) {
+                                RuleLabel(text: "Context")
+                                sentenceBlock
+                                    .frame(maxWidth: .infinity)
                             }
-                            .padding(14)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Theme.panelInset, in: RoundedRectangle(cornerRadius: 6))
-                        }
 
-                        addButton
+                            if let tr = vm.current?.translation, !tr.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    RuleLabel(text: "Meaning")
+                                    Text(tr)
+                                        .font(.system(size: 15))
+                                        .foregroundStyle(Theme.ink)
+                                }
+                                .padding(14)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Theme.panelInset, in: RoundedRectangle(cornerRadius: 6))
+                            }
+
+                            addButton
+                        }
+                        .padding(18)
                     }
-                    .padding(18)
                     .background(Theme.panel)
                     .clipShape(RoundedRectangle(cornerRadius: 11))
                     .overlay(RoundedRectangle(cornerRadius: 11).stroke(Theme.line))
@@ -88,11 +97,9 @@ struct ReviewView: View {
             }
             .navigationTitle(vm.current.map { "Line \($0.index + 1) / \(vm.session.cues.count)" } ?? "Review")
             .navigationBarTitleDisplayMode(.inline)
-            // The video pane sits right under the bar — keep the bar opaque
-            // and dark so the title stays legible over the black media area.
-            .toolbarBackground(.black, for: .navigationBar)
+            // The media now lives inside the card, so the bar sits on paper.
+            .toolbarBackground(Theme.page, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
             .onAppear { playCurrent() }
             .onDisappear { segmentPlayer.stop(); clipPlayer?.stop() }
             .onChange(of: vm.index) { playCurrent() }
