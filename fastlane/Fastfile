@@ -1,0 +1,44 @@
+default_platform(:ios)
+
+# Same setup as the other apps on this machine: the ASC private key lives
+# outside the repo; Key ID / Issuer ID come from the environment so nothing
+# sensitive is committed.
+KEY_ID   = ENV["ASC_KEY_ID"]
+ISSUER   = ENV["ASC_ISSUER_ID"]
+KEY_PATH = ENV["ASC_KEY_PATH"] || File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{KEY_ID}.p8")
+
+platform :ios do
+  desc "Archive + export a signed App Store IPA"
+  lane :build do
+    build_app(
+      project: "AnkiStudio.xcodeproj",
+      scheme: "AnkiStudio",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "build",
+      output_name: "AnkiStudio",
+      clean: true,
+      xcargs: "-allowProvisioningUpdates " \
+              "-authenticationKeyPath #{KEY_PATH} " \
+              "-authenticationKeyID #{KEY_ID} " \
+              "-authenticationKeyIssuerID #{ISSUER}"
+    )
+  end
+
+  desc "Upload the built IPA to TestFlight"
+  lane :upload do
+    api_key = app_store_connect_api_key(key_id: KEY_ID, issuer_id: ISSUER, key_filepath: KEY_PATH)
+    upload_to_testflight(
+      api_key: api_key,
+      ipa: "build/AnkiStudio.ipa",
+      skip_submission: true,
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Build then upload to TestFlight"
+  lane :beta do
+    build
+    upload
+  end
+end
