@@ -91,17 +91,28 @@ struct ReviewView: View {
                 }
                 .background(Theme.page)
 
-                Divider().overlay(Theme.line)
-                controls
-                    .background(Theme.page)
+                // Pre-iOS 26 fallback: on 26+ the prev/next controls live in
+                // the tab bar's Liquid Glass accessory instead.
+                if #unavailable(iOS 26.1) {
+                    Divider().overlay(Theme.line)
+                    controls
+                        .background(Theme.page)
+                }
             }
             .navigationTitle(vm.current.map { "Line \($0.index + 1) / \(vm.session.cues.count)" } ?? "Review")
             .navigationBarTitleDisplayMode(.inline)
             // The media now lives inside the card, so the bar sits on paper.
             .toolbarBackground(Theme.page, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .onAppear { playCurrent() }
-            .onDisappear { segmentPlayer.stop(); clipPlayer?.stop() }
+            .onAppear {
+                ReviewNav.shared.active = vm
+                playCurrent()
+            }
+            .onDisappear {
+                if ReviewNav.shared.active === vm { ReviewNav.shared.active = nil }
+                segmentPlayer.stop()
+                clipPlayer?.stop()
+            }
             .onChange(of: vm.index) { playCurrent() }
             .sheet(item: $dictionaryToken) { token in
                 DictionarySheet(token: token)
