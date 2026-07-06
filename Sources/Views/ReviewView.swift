@@ -138,10 +138,18 @@ struct ReviewView: View {
         }
     }
 
+    @ViewBuilder
     private var sentenceBlock: some View {
-        FlowLayout(hSpacing: 2, vSpacing: 12) {
-            ForEach(Array(vm.tokens.enumerated()), id: \.offset) { pair in
-                tokenView(index: pair.offset, token: pair.element)
+        if vm.tokens.isEmpty {
+            // No tokenization for this cue — show the plain sentence rather
+            // than nothing (desktop behavior).
+            Text(vm.current?.text ?? "")
+                .font(.system(size: 26, weight: .medium))
+        } else {
+            FlowLayout(hSpacing: 2, vSpacing: 12) {
+                ForEach(Array(vm.tokens.enumerated()), id: \.offset) { pair in
+                    tokenView(index: pair.offset, token: pair.element)
+                }
             }
         }
     }
