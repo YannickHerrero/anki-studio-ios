@@ -12,6 +12,7 @@ struct ExplainSheet: View {
     @State private var gloss: SentenceGloss?
     @State private var loading = false
     @State private var errorMessage: String?
+    @State private var detent: PresentationDetent = .medium
 
     init(cue: Cue, onGenerated: @escaping (SentenceGloss) -> Void) {
         self.cue = cue
@@ -58,9 +59,13 @@ struct ExplainSheet: View {
             }
             .task {
                 if gloss == nil { generate() }
+                // Screenshot hook: the launch-env path opens fully expanded.
+                if ProcessInfo.processInfo.environment["SHOW_EXPLAIN"] == "1" {
+                    detent = .large
+                }
             }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.medium, .large], selection: $detent)
         .presentationDragIndicator(.visible)
     }
 

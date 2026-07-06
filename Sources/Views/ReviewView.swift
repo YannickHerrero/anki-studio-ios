@@ -123,9 +123,12 @@ struct ReviewView: View {
             .onAppear {
                 ReviewNav.shared.active = vm
                 playCurrent()
-                // Screenshot/test hook: open the Explain sheet on launch.
+                // Screenshot/test hooks: open the Explain / dictionary sheet.
                 if ProcessInfo.processInfo.environment["SHOW_EXPLAIN"] == "1" {
                     explainCue = vm.current
+                }
+                if ProcessInfo.processInfo.environment["SHOW_DICT"] == "1" {
+                    dictionaryToken = vm.tokens.first(where: \.content)
                 }
             }
             .onDisappear {
