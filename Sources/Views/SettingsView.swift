@@ -51,6 +51,8 @@ struct SettingsView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.page)
             .navigationTitle("Settings")
         }
     }

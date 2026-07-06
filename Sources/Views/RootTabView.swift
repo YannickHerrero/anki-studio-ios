@@ -19,6 +19,8 @@ struct RootTabView: View {
                 .tabItem { Label("Settings", systemImage: "gearshape") }
                 .tag(2)
         }
+        // The card template's green drives the whole app.
+        .tint(Theme.accent)
         .onAppear {
             // UI-test / screenshot hook: seed a demo session and open Library.
             if ProcessInfo.processInfo.environment["SEED_DEMO"] == "1" {

@@ -31,8 +31,10 @@ struct LibraryView: View {
                         }
                     }
                     .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                 }
             }
+            .background(Theme.page)
             .navigationTitle("Library")
         }
     }

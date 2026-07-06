@@ -71,6 +71,8 @@ struct IngestView: View {
                 }
 
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.page)
             .navigationTitle("Add")
             .confirmationDialog(
                 "This video has Japanese subtitles",

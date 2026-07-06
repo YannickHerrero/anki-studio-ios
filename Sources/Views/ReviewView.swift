@@ -47,19 +47,44 @@ struct ReviewView: View {
                 mediaArea
                     .frame(maxWidth: .infinity)
                     .frame(height: 210)
-                    .background(Color.black.opacity(0.9))
+                    .background(Theme.videoBg)
 
+                // The content mirrors the Anki card: a floating panel on the
+                // warm paper background, with rule-labelled sections.
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        sentenceBlock
-                        translationBlock
+                    VStack(alignment: .leading, spacing: 18) {
+                        VStack(alignment: .leading, spacing: 14) {
+                            RuleLabel(text: "Context")
+                            sentenceBlock
+                                .frame(maxWidth: .infinity)
+                        }
+
+                        if let tr = vm.current?.translation, !tr.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                RuleLabel(text: "Meaning")
+                                Text(tr)
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(Theme.ink)
+                            }
+                            .padding(14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Theme.panelInset, in: RoundedRectangle(cornerRadius: 6))
+                        }
+
                         addButton
                     }
-                    .padding()
+                    .padding(18)
+                    .background(Theme.panel)
+                    .clipShape(RoundedRectangle(cornerRadius: 11))
+                    .overlay(RoundedRectangle(cornerRadius: 11).stroke(Theme.line))
+                    .shadow(color: .black.opacity(0.10), radius: 18, y: 8)
+                    .padding(16)
                 }
+                .background(Theme.page)
 
-                Divider()
+                Divider().overlay(Theme.line)
                 controls
+                    .background(Theme.page)
             }
             .navigationTitle(vm.current.map { "Line \($0.index + 1) / \(vm.session.cues.count)" } ?? "Review")
             .navigationBarTitleDisplayMode(.inline)
@@ -132,9 +157,11 @@ struct ReviewView: View {
                 Haptics.tap()
                 playCurrent()
             } label: {
+                // The card's green play disc (.js-audio--overlay).
                 Image(systemName: "arrow.counterclockwise.circle.fill")
                     .font(.system(size: 30))
-                    .foregroundStyle(.white, .black.opacity(0.45))
+                    .foregroundStyle(.white, Theme.accent)
+                    .shadow(color: .black.opacity(0.25), radius: 5, y: 2)
             }
             .padding(10)
         }
@@ -146,9 +173,10 @@ struct ReviewView: View {
             // No tokenization for this cue — show the plain sentence rather
             // than nothing (desktop behavior).
             Text(vm.current?.text ?? "")
-                .font(.system(size: 26, weight: .medium))
+                .font(Theme.jp(24, .medium))
+                .foregroundStyle(Theme.ink)
         } else {
-            FlowLayout(hSpacing: 2, vSpacing: 12) {
+            FlowLayout(hSpacing: 2, vSpacing: 14) {
                 ForEach(Array(vm.tokens.enumerated()), id: \.offset) { pair in
                     tokenView(index: pair.offset, token: pair.element)
                 }
@@ -162,17 +190,17 @@ struct ReviewView: View {
             let picked = vm.pickedLemmasForCurrent.contains(token.lemma)
             let selected = vm.isSelected(index)
             Text(token.surface)
-                .font(.system(size: 26, weight: .medium))
+                .font(Theme.jp(24, .medium))
                 .padding(.horizontal, 4)
                 .padding(.vertical, 2)
-                .background(selected ? Color.accentColor.opacity(0.25) : Color.clear)
+                .background(selected ? Theme.accent.opacity(0.18) : Color.clear)
                 .overlay(alignment: .bottom) {
                     Rectangle()
-                        .fill(picked ? Color.green : Color.accentColor.opacity(0.5))
+                        .fill(picked ? Theme.accent : Theme.accent.opacity(0.4))
                         .frame(height: 2)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 4))
-                .foregroundStyle(picked ? Color.green : Color.primary)
+                .foregroundStyle(picked ? Theme.accent : Theme.ink)
                 .contentShape(Rectangle())
                 // Tap = yomitan-style lookup; long-press = toggle in the
                 // multi-select (committed by the add-to-pile button).
@@ -186,17 +214,8 @@ struct ReviewView: View {
                 }
         } else {
             Text(token.surface)
-                .font(.system(size: 26))
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    @ViewBuilder
-    private var translationBlock: some View {
-        if let tr = vm.current?.translation, !tr.isEmpty {
-            Text(tr)
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                .font(Theme.jp(24))
+                .foregroundStyle(Theme.muted)
         }
     }
 
@@ -213,6 +232,7 @@ struct ReviewView: View {
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
+        .tint(Theme.accent)
         .disabled(vm.selectedCount == 0)
     }
 
