@@ -26,3 +26,6 @@ Package.resolved
 # fastlane
 fastlane/report.xml
 fastlane/README.md
+
+# XcodeGen-generated
+Info.plist
