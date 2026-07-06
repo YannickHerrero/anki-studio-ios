@@ -6,18 +6,30 @@ import UIKit
 /// its review session; this is the main navigation between videos.
 struct LibraryView: View {
     @ObservedObject private var store = SessionStore.shared
+    @StateObject private var ingestRun = IngestRun()
+    @ObservedObject private var settings = AppSettings.shared
+    @State private var showsAdd = false
 
     var body: some View {
         NavigationStack {
             Group {
-                if store.sessions.isEmpty {
-                    ContentUnavailableView(
-                        "No videos yet",
-                        systemImage: "books.vertical",
-                        description: Text("Import a YouTube video from the Add tab to start mining.")
-                    )
+                if store.sessions.isEmpty, !ingestRun.isRunning {
+                    ContentUnavailableView {
+                        Label("No videos yet", systemImage: "books.vertical")
+                    } description: {
+                        Text("Import a YouTube video to start mining.")
+                    } actions: {
+                        Button("Add video") { showsAdd = true }
+                            .buttonStyle(.borderedProminent)
+                    }
                 } else {
                     List {
+                        // A running import surfaces here once the sheet closes.
+                        if ingestRun.isRunning, !showsAdd {
+                            Section {
+                                IngestProgressRow(run: ingestRun)
+                            }
+                        }
                         ForEach(store.sessions) { session in
                             NavigationLink {
                                 ReviewView(session: session)
@@ -36,6 +48,26 @@ struct LibraryView: View {
             }
             .background(Theme.page)
             .navigationTitle("Library")
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        Haptics.tap()
+                        showsAdd = true
+                    } label: {
+                        Label("Add video", systemImage: "plus")
+                    }
+                }
+            }
+            .sheet(isPresented: $showsAdd) {
+                AddVideoSheet(run: ingestRun)
+            }
+            .onAppear {
+                // Headless test hook: start an import straight from launch env.
+                if let url = ProcessInfo.processInfo.environment["INGEST_URL"],
+                   !ingestRun.isRunning {
+                    Task { await ingestRun.run(urlString: url, settings: settings) }
+                }
+            }
         }
     }
 }
