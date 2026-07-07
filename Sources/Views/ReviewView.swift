@@ -170,7 +170,7 @@ struct ReviewView: View {
 
     @ViewBuilder
     private var mediaArea: some View {
-        ZStack(alignment: .bottomLeading) {
+        ZStack(alignment: .bottomTrailing) {
             if videoURL != nil {
                 VideoPlayer(player: segmentPlayer.player)
             } else if let cue = vm.current,
