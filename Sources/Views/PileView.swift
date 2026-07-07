@@ -14,6 +14,7 @@ struct PileView: View {
 
     @State private var exportFile: ExportFile?
     @State private var exportError: String?
+    @State private var showsClearConfirm = false
 
     var body: some View {
         Group {
@@ -54,8 +55,24 @@ struct PileView: View {
                     .disabled(vm.session.picks.isEmpty)
             }
         }
-        .sheet(item: $exportFile) { file in
+        .sheet(item: $exportFile, onDismiss: {
+            // The deck was handed to Anki — offer a fresh pile.
+            if !vm.session.picks.isEmpty { showsClearConfirm = true }
+        }) { file in
             ShareSheet(items: [file.url])
+        }
+        .confirmationDialog(
+            "Deck exported",
+            isPresented: $showsClearConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Clear \(vm.session.picks.count) cards from the pile", role: .destructive) {
+                Haptics.success()
+                vm.clearPile()
+            }
+            Button("Keep the pile", role: .cancel) {}
+        } message: {
+            Text("Clear the exported words so the next export starts fresh?")
         }
         .alert("Export failed", isPresented: Binding(
             get: { exportError != nil },

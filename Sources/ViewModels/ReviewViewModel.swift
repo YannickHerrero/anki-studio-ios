@@ -84,6 +84,12 @@ final class ReviewViewModel: ObservableObject {
         persist()
     }
 
+    /// Empty the pile (offered after a deck export).
+    func clearPile() {
+        session.picks.removeAll()
+        persist()
+    }
+
     /// Cache a generated gloss on its cue so Explain and export reuse it.
     func setGloss(_ gloss: SentenceGloss, forCueIndex cueIndex: Int) {
         guard let i = session.cues.firstIndex(where: { $0.index == cueIndex }) else { return }
