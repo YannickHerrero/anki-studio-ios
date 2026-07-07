@@ -15,6 +15,8 @@ struct PileView: View {
     @State private var exportFile: ExportFile?
     @State private var exportError: String?
     @State private var showsClearConfirm = false
+    @State private var exporting = false
+    @State private var exportStage = ""
 
     var body: some View {
         Group {
@@ -51,8 +53,15 @@ struct PileView: View {
         .navigationTitle("Pile (\(vm.session.picks.count))")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("Export") { export() }
-                    .disabled(vm.session.picks.isEmpty)
+                if exporting {
+                    HStack(spacing: 6) {
+                        ProgressView().controlSize(.small)
+                        Text(exportStage).font(.caption)
+                    }
+                } else {
+                    Button("Export") { export() }
+                        .disabled(vm.session.picks.isEmpty)
+                }
             }
         }
         .sheet(item: $exportFile, onDismiss: {
@@ -74,6 +83,12 @@ struct PileView: View {
         } message: {
             Text("Clear the exported words so the next export starts fresh?")
         }
+        .onAppear {
+            // Headless test hook: run the export straight away.
+            if ProcessInfo.processInfo.environment["AUTO_EXPORT"] == "1", !exporting {
+                export()
+            }
+        }
         .alert("Export failed", isPresented: Binding(
             get: { exportError != nil },
             set: { if !$0 { exportError = nil } }
@@ -85,13 +100,29 @@ struct PileView: View {
     }
 
     private func export() {
-        do {
-            let url = try ExportService.build(session: vm.session, deckName: settings.deckName)
-            Haptics.success()
-            exportFile = ExportFile(url: url)
-        } catch {
-            Haptics.warning()
-            exportError = String(describing: error)
+        guard settings.isConfigured else {
+            exportError = "Set your OpenRouter key in Settings first."
+            return
+        }
+        exporting = true
+        exportStage = "Preparing…"
+        Task {
+            do {
+                let (url, enriched) = try await ExportService.build(
+                    session: vm.session,
+                    deckName: settings.deckName,
+                    llm: .init(apiKey: settings.openrouterKey.trimmed, model: settings.model)
+                ) { stage in
+                    exportStage = stage.label
+                }
+                vm.adoptEnriched(enriched)
+                Haptics.success()
+                exportFile = ExportFile(url: url)
+            } catch {
+                Haptics.warning()
+                exportError = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
+            }
+            exporting = false
         }
     }
 }

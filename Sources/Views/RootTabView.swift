@@ -13,6 +13,9 @@ struct RootTabView: View {
                 NavigationStack { SettingsView() }
             } else if ProcessInfo.processInfo.environment["SHOW_STORAGE"] == "1" {
                 NavigationStack { SessionStorageView() }
+            } else if ProcessInfo.processInfo.environment["SHOW_PILE"] == "1",
+                      let first = SessionStore.shared.sessions.first {
+                NavigationStack { PileView(vm: ReviewViewModel(session: first)) }
             } else {
                 tabs
             }

@@ -1,10 +1,80 @@
 import Foundation
 
-/// Maps a session's picks into Anki notes and builds the `.apkg`. Ports the
-/// field mapping from server/src/routes/export.ts.
+/// Builds the deck from a session's picks — after enriching them with the
+/// LLM, like the desktop export route: word details for every pick (batched)
+/// and an interlinear gloss for every unique cue that doesn't have one yet.
+/// Enrichment results are persisted so re-exports and the Explain sheet
+/// reuse them for free.
 enum ExportService {
-    /// Build a deck for all (or only unexported) picks and return the file URL.
-    static func build(session: Session, deckName: String) throws -> URL {
+    enum Stage {
+        case words(done: Int, total: Int)
+        case glosses(done: Int, total: Int)
+        case packaging
+
+        var label: String {
+            switch self {
+            case .words(let d, let t): return "Word details \(d)/\(t)"
+            case .glosses(let d, let t): return "Explanations \(d)/\(t)"
+            case .packaging: return "Building deck"
+            }
+        }
+    }
+
+    /// Enrich + build. Returns the deck URL and the enriched session (the
+    /// caller persists it). Gloss failures are non-fatal — that card just
+    /// ships without a Grammar section.
+    @MainActor
+    static func build(
+        session: Session,
+        deckName: String,
+        llm: OpenRouterService.Options,
+        onProgress: @escaping (Stage) -> Void
+    ) async throws -> (url: URL, session: Session) {
+        var session = session
+        let cueByIndex = Dictionary(session.cues.map { ($0.index, $0) },
+                                    uniquingKeysWith: { a, _ in a })
+
+        // 1. Word details, ~20 picks per call, skipping already-enriched ones.
+        let needing = session.picks.enumerated().filter { $0.element.details == nil }
+        let batchSize = 20
+        var done = 0
+        onProgress(.words(done: 0, total: needing.count))
+        var start = 0
+        while start < needing.count {
+            let slice = Array(needing[start..<min(start + batchSize, needing.count)])
+            let items = slice.map { (
+                lemma: $0.element.lemma,
+                surface: $0.element.surface,
+                sentence: cueByIndex[$0.element.cueIndex]?.text ?? ""
+            ) }
+            let details = try await OpenRouterService.enrichWordBatch(items, opts: llm)
+            for (offset, entry) in slice.enumerated() where offset < details.count {
+                session.picks[entry.offset].details = details[offset]
+            }
+            start += slice.count
+            done += slice.count
+            onProgress(.words(done: done, total: needing.count))
+        }
+
+        // 2. Glosses for unique cues that were never explained.
+        let uniqueCues = Array(Set(session.picks.map(\.cueIndex))).sorted()
+        let missingGloss = uniqueCues.filter { idx in
+            session.cues.first(where: { $0.index == idx })?.gloss == nil
+        }
+        done = 0
+        onProgress(.glosses(done: 0, total: missingGloss.count))
+        for cueIndex in missingGloss {
+            guard let i = session.cues.firstIndex(where: { $0.index == cueIndex }) else { continue }
+            if let gloss = try? await OpenRouterService.glossSentence(
+                session.cues[i].text, opts: llm) {
+                session.cues[i].gloss = gloss
+            }
+            done += 1
+            onProgress(.glosses(done: done, total: missingGloss.count))
+        }
+
+        // 3. Package.
+        onProgress(.packaging)
         let templates = AnkiAssets.load()
         let safeName = deckName.trimmed.isEmpty ? "Anki Studio Export" : deckName.trimmed
         let out = FileManager.default.temporaryDirectory
@@ -18,7 +88,7 @@ enum ExportService {
             css: templates.css,
             outURL: out
         )
-        return out
+        return (out, session)
     }
 
     static func notes(for session: Session) -> [ApkgNote] {

@@ -303,6 +303,86 @@ enum OpenRouterService {
         return try JSONDecoder().decode(SentenceGloss.self, from: data)
     }
 
+    // MARK: - Word details (openrouter.ts enrichWordBatch — export enrichment)
+
+    private static let wordDetailsSystem = """
+    You produce flashcard annotations for one Japanese word at a time.
+    You receive a numbered list of items, each with the dictionary form (lemma), the
+    surface form as seen in the sentence, and the sentence the word appears in.
+    For each item return ONE entry with: a short context-aware definition (1-2 lines,
+    matching the meaning used in that sentence — not every sense of the word), the
+    hiragana reading of the lemma, the Tokyo pitch accent (bracketed-number form like
+    '[2]' or empty string if unknown), a frequency label ('very common', 'common',
+    'uncommon', 'rare'), a short part-of-speech label, and a brief usage note (or empty
+    string). The output array must have the same length and order as the input list.
+    """
+
+    private static let wordDetailsSchema: [String: Any] = [
+        "type": "object",
+        "properties": [
+            "details": [
+                "type": "array",
+                "description": "One entry per input word, in the same order.",
+                "items": [
+                    "type": "object",
+                    "properties": [
+                        "definition": ["type": "string"],
+                        "reading": ["type": "string", "description": "Hiragana reading of the dictionary form (lemma)."],
+                        "pitchPattern": ["type": "string", "description": "Bracketed-number Tokyo pitch accent, or empty."],
+                        "frequency": ["type": "string", "description": "'very common', 'common', 'uncommon' or 'rare'."],
+                        "partOfSpeech": ["type": "string"],
+                        "usageNotes": ["type": "string"],
+                    ],
+                    "required": ["definition", "reading", "pitchPattern", "frequency", "partOfSpeech", "usageNotes"],
+                    "additionalProperties": false,
+                ],
+            ],
+        ],
+        "required": ["details"],
+        "additionalProperties": false,
+    ]
+
+    /// Context-aware details for a batch of picked words (one call). The output
+    /// is padded/truncated to the input length so callers can index by position.
+    static func enrichWordBatch(
+        _ items: [(lemma: String, surface: String, sentence: String)], opts: Options
+    ) async throws -> [WordDetails] {
+        guard !items.isEmpty else { return [] }
+
+        struct Out: Decodable {
+            struct Entry: Decodable {
+                var definition: String
+                var reading: String
+                var pitchPattern: String
+                var frequency: String
+                var partOfSpeech: String
+                var usageNotes: String
+            }
+            var details: [Entry]?
+        }
+
+        let numbered = items.enumerated()
+            .map { "\($0.offset + 1). lemma=\($0.element.lemma); surface=\($0.element.surface); sentence=\($0.element.sentence)" }
+            .joined(separator: "\n")
+        let data = try await chatJSON(
+            system: wordDetailsSystem, user: numbered,
+            schemaName: "word_details_batch", schema: wordDetailsSchema, opts: opts)
+
+        var out = (try JSONDecoder().decode(Out.self, from: data).details ?? []).map { e in
+            WordDetails(
+                definition: e.definition,
+                reading: e.reading,
+                pitchPattern: e.pitchPattern.isEmpty ? nil : e.pitchPattern,
+                frequency: e.frequency.isEmpty ? nil : e.frequency,
+                partOfSpeech: e.partOfSpeech.isEmpty ? nil : e.partOfSpeech,
+                usageNotes: e.usageNotes.isEmpty ? nil : e.usageNotes)
+        }
+        while out.count < items.count {
+            out.append(WordDetails(definition: "", reading: ""))
+        }
+        return Array(out.prefix(items.count))
+    }
+
     // MARK: - Mining-value verdict (openrouter.ts assessMiningValue)
 
     private static let mineSystem = """

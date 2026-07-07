@@ -90,6 +90,13 @@ final class ReviewViewModel: ObservableObject {
         persist()
     }
 
+    /// Adopt the export-enriched session (word details + glosses) and persist
+    /// so re-exports and the Explain sheet reuse the LLM output for free.
+    func adoptEnriched(_ enriched: Session) {
+        session = enriched
+        persist()
+    }
+
     /// Cache a generated gloss on its cue so Explain and export reuse it.
     func setGloss(_ gloss: SentenceGloss, forCueIndex cueIndex: Int) {
         guard let i = session.cues.firstIndex(where: { $0.index == cueIndex }) else { return }
